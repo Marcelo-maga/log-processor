@@ -1,0 +1,16 @@
+services:
+  logs-melhor-envio-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    container_name: logs-melhor-envio-api
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run start:dev
+    restart: unless-stopped
