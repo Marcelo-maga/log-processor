@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { PgPrismaAdapter } from './shared/infra/PgPrismaAdapter';
 
 @Module({
   imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [PgPrismaAdapter],
 })
 export class AppModule {}
