@@ -22,8 +22,13 @@ export class ProcessLogFileUseCase implements UseCase<string, void> {
     this.logger.log(`Iniciando processamento: ${filepath}`);
 
     for await (const line of this.fileReader.read(filepath)) {
-      const log = GatewayLogMapper.toDomain(JSON.parse(line) as LogFileDto);
-      batch.push(log);
+      try {
+        const log = GatewayLogMapper.toDomain(JSON.parse(line) as LogFileDto);
+        batch.push(log);
+      } catch {
+        this.logger.warn('JSON parse fails');
+        continue;
+      }
 
       if (batch.length >= BATCH_SIZE) {
         await this.logRepository.saveMany(batch);
