@@ -25,13 +25,14 @@ export class ProcessLogFileUseCase implements UseCase<string, void> {
       try {
         const log = GatewayLogMapper.toDomain(JSON.parse(line) as LogFileDto);
         batch.push(log);
-      } catch {
-        this.logger.warn('JSON parse fails');
+      } catch (error) {
+        this.logger.warn('line JSON parse fails');
+        this.logger.debug(error);
         continue;
       }
 
       if (batch.length >= BATCH_SIZE) {
-        await this.logRepository.saveMany(batch);
+        await this.logRepository.saveMany([...batch]);
         batch.length = 0;
       }
     }

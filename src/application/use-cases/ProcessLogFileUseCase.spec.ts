@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/require-await */
 
 import { ProcessLogFileUseCase } from './ProcessLogFileUseCase';
 import { LogFileReader } from 'src/domain/ports/outbound/LogFileReader';
 import { GatewayLogsRepository } from 'src/domain/ports/outbound/GatewayLogsRepository';
+import { GatewayLogMapper } from '../mappers/GatewayLogMapper';
 
 const makeLine = (overrides = {}) =>
   JSON.stringify({
@@ -65,5 +67,11 @@ describe('ProcessLogFileUseCase', () => {
     fileReader.read.mockReturnValue(toAsyncIterable(lines));
 
     await expect(useCase.execute('/any/path')).resolves.not.toThrow();
+  });
+
+  it('should map a valid line', () => {
+    const line = makeLine();
+    const dto = JSON.parse(line);
+    expect(() => GatewayLogMapper.toDomain(dto)).not.toThrow();
   });
 });
