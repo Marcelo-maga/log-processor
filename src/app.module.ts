@@ -14,6 +14,9 @@ import { NdjsonFileReader } from './infrastructure/outbound/file/NdjsonFileReade
 import { PrismaGatewayLogsRepository } from './infrastructure/outbound/database/PrismaGatewayLogsRepository';
 import { PrismaReportsRepository } from './infrastructure/outbound/database/PrismaReportsRepository';
 import { CsvFileCreator } from './infrastructure/outbound/file/CsvFileCreate';
+import { ConsumerReport } from './application/dto/ConsumerReport';
+import { ServiceReport } from './application/dto/ServiceReport';
+import { AvgLatencyReport } from './application/dto/AvgLatencyReport';
 
 @Module({
   imports: [],
@@ -50,20 +53,26 @@ import { CsvFileCreator } from './infrastructure/outbound/file/CsvFileCreate';
     },
     {
       provide: CreateConsumerReportUseCase,
-      useFactory: (csv: CsvSerializer<any>, repository: ReportsRepository) =>
-        new CreateConsumerReportUseCase(csv, repository),
+      useFactory: (
+        csv: CsvSerializer<ConsumerReport>,
+        repository: ReportsRepository,
+      ) => new CreateConsumerReportUseCase(csv, repository),
       inject: [CsvSerializer, ReportsRepository],
     },
     {
       provide: CreateServiceReportUseCase,
-      useFactory: (csv: CsvSerializer<any>, repository: ReportsRepository) =>
-        new CreateServiceReportUseCase(csv, repository),
+      useFactory: (
+        csv: CsvSerializer<ServiceReport>,
+        repository: ReportsRepository,
+      ) => new CreateServiceReportUseCase(csv, repository),
       inject: [CsvSerializer, ReportsRepository],
     },
     {
       provide: CreateAvgLatencyReportUseCase,
-      useFactory: (csv: CsvSerializer<any>, repository: ReportsRepository) =>
-        new CreateAvgLatencyReportUseCase(csv, repository),
+      useFactory: (
+        csv: CsvSerializer<AvgLatencyReport>,
+        repository: ReportsRepository,
+      ) => new CreateAvgLatencyReportUseCase(csv, repository),
       inject: [CsvSerializer, ReportsRepository],
     },
   ],

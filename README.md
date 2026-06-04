@@ -1,98 +1,234 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# log-processor - Documentacao Operacional
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 1. Visao geral do sistema
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+O sistema processa arquivos de log no formato NDJSON, persiste os registros em PostgreSQL e expoe relatorios CSV agregados por consumidor, servico e latencia media.
 
-## Description
+Arquitetura em alto nivel:
+- API HTTP em NestJS com endpoints para ingestao e consulta de relatorios.
+- Camada de aplicacao com casos de uso de processamento e geracao de relatorios.
+- Persistencia via Prisma + PostgreSQL.
+- Leitura de arquivo NDJSON e serializacao CSV.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Responsabilidades principais:
+- Ler logs de arquivo NDJSON linha a linha.
+- Converter cada linha para entidade de dominio.
+- Persistir em lote no banco.
+- Gerar relatorios CSV por agregacao no banco.
 
-## Project setup
+## 2. Estrutura do sistema
+
+### 2.1 Entradas HTTP
+
+- POST /reader
+  - Processa um arquivo NDJSON indicado no corpo da requisicao.
+  - Corpo esperado: { "filepath": "/usr/src/app/log_files/logs.txt" }
+  - Retorno: 204 No Content em sucesso.
+
+- GET /reports/consumer
+  - Retorna CSV com total de requisicoes por consumidor.
+
+- GET /reports/service
+  - Retorna CSV com total de requisicoes por servico.
+
+- GET /reports/latency
+  - Retorna CSV com medias de latencia por servico.
+
+- GET /docs
+  - Documentacao Swagger gerada em runtime.
+
+### 2.2 Camada de aplicacao
+
+- ProcessLogFileUseCase
+  - Leitura do arquivo NDJSON.
+  - Parse JSON linha a linha.
+  - Persistencia em lote (batch size = 500).
+
+- CreateConsumerReportUseCase
+  - Consulta agregada por consumidor e serializa CSV.
+
+- CreateServiceReportUseCase
+  - Consulta agregada por servico e serializa CSV.
+
+- CreateAvgLatencyReportUseCase
+  - Consulta agregada por latencias medias e serializa CSV.
+
+### 2.3 Persistencia
+
+- Prisma + Postgres.
+- Tabela principal: ApiGatewayLog.
+- Indices em consumerId e serviceName.
+
+### 2.4 Fluxo de dados
+
+1) Cliente envia POST /reader com o caminho do arquivo NDJSON.
+2) O leitor de arquivo percorre cada linha valida do arquivo.
+3) Cada linha e mapeada para a entidade GatewayLog.
+4) Os registros sao persistidos em lote no Postgres.
+5) Cliente acessa /reports/* para gerar CSV com dados agregados.
+
+## 3. Comandos operacionais
+
+### 3.1 Instalacao de dependencias
+
+- Proposito: instalar dependencias Node.js.
+- Comando:
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+- Resultado esperado: node_modules criado e pacotes instalados.
+- Falhas comuns:
+  - Erros de rede ou permissao no npm.
+  - Versao de Node incompativel (verifique a imagem Docker ou seu Node local).
+
+### 3.2 Build (compilacao)
+
+- Proposito: compilar TypeScript para JavaScript em dist/.
+- Comando:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run build
 ```
 
-## Run tests
+- Resultado esperado: pasta dist/ com arquivos compilados.
+- Falhas comuns:
+  - Erros de TypeScript por tipos invalidos.
+  - Falta de variaveis de ambiente exigidas por Prisma em tempo de build.
+
+### 3.3 Executar em desenvolvimento (local)
+
+- Proposito: iniciar a API com recarregamento automatico.
+- Comando:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start:dev
 ```
 
-## Deployment
+- Resultado esperado: API ouvindo em PORT (padrao 3000).
+- Falhas comuns:
+  - DATABASE_URL ausente (o Prisma exige essa variavel).
+  - Porta 3000 em uso.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### 3.4 Executar em producao (local)
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- Proposito: executar o build compilado.
+- Comandos:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run build
+npm run start:prod
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- Resultado esperado: API ouvindo em PORT (padrao 3000) usando dist/.
+- Falhas comuns:
+  - dist/ ausente (build nao executado).
+  - DATABASE_URL ausente.
 
-## Resources
+### 3.5 Executar via Docker Compose
 
-Check out a few resources that may come in handy when working with NestJS:
+- Proposito: subir API + Postgres com configuracao padrao.
+- Comando:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+docker compose up --build
+```
 
-## Support
+- Resultado esperado:
+  - Container postgres_db com banco logs_reports.
+  - Container logs-melhor-envio-api em modo dev.
+- Comportamento:
+  - Ao iniciar o container, roda: npx prisma migrate deploy && npm run start:dev
+- Falhas comuns:
+  - Porta 3000 ou 5432 em uso.
+  - Falha no healthcheck do Postgres.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 3.6 Migracoes Prisma
 
-## Stay in touch
+- Proposito: aplicar migracoes no banco.
+- Comando:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npx prisma migrate deploy
+```
 
-## License
+- Resultado esperado: migracoes aplicadas e tabela _prisma_migrations atualizada.
+- Falhas comuns:
+  - DATABASE_URL invalida.
+  - Banco indisponivel.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### 3.7 Testes
+
+- Proposito: executar testes unitarios.
+- Comando:
+
+```bash
+npm run test
+```
+
+- Resultado esperado: testes .spec.ts em src/.
+- Falhas comuns:
+  - Dependencias ausentes.
+  - Erros de tipagem ou mocks incorretos.
+
+- Proposito: executar testes e2e.
+- Comando:
+
+```bash
+npm run test:e2e
+```
+
+- Resultado esperado: testes em test/.
+- Falhas comuns:
+  - Banco ou dependencias externas nao configuradas.
+
+### 3.8 Debug
+
+- Proposito: iniciar servidor com debug.
+- Comando:
+
+```bash
+npm run start:debug
+```
+
+- Resultado esperado: processo com debug habilitado.
+- Falhas comuns:
+  - Porta de debug em uso.
+
+## 4. Uso operacional
+
+### 4.1 Processar arquivo de logs
+
+- Proposito: persistir logs NDJSON.
+- Endpoint:
+  - POST /reader
+- Exemplo de corpo:
+  - { "filepath": "/usr/src/app/log_files/logs.txt" }
+- Resultado esperado:
+  - HTTP 204 sem conteudo.
+- Falhas comuns:
+  - Caminho invalido ou arquivo inacessivel.
+  - Linhas invalidas em JSON (sao ignoradas com warn no log).
+
+### 4.2 Gerar relatorios CSV
+
+- Proposito: baixar CSVs agregados.
+- Endpoints:
+  - GET /reports/consumer -> consumers.csv
+  - GET /reports/service -> services.csv
+  - GET /reports/latency -> avg.csv
+- Resultado esperado:
+  - Resposta text/csv com arquivo para download.
+- Falhas comuns:
+  - Banco sem dados processados.
+  - Erro de conexao com o banco.
+
+## 5. Manutencao e observacoes
+
+- A variavel de ambiente DATABASE_URL e obrigatoria para iniciar a aplicacao.
+- O processamento de arquivo usa batch de 500 registros para gravacao.
+- Linhas invalidas em JSON sao descartadas e registradas em log.
+- O caminho do arquivo deve ser acessivel pelo processo (no Docker, use /usr/src/app/log_files).
+- Nao ha passos de deploy definidos no repositorio alem do Dockerfile e docker-compose.
+- Informacoes sobre autenticacao, autorizacao ou limites de rate nao estao presentes no codigo atual.
