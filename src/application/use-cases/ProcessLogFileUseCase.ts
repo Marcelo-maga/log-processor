@@ -1,10 +1,10 @@
-import { LogFileReader } from 'src/domain/ports/outbound/LogFileReader';
 import { UseCase } from '../interfaces/UseCase';
-import { GatewayLogsRepository } from 'src/domain/ports/outbound/GatewayLogsRepository';
 import { GatewayLogMapper } from '../mappers/GatewayLogMapper';
 import { GatewayLog } from 'src/domain/entities/GatewayLog';
 import { LogFileDto } from '../dto/LogFileDto';
 import { Logger } from '@nestjs/common';
+import { LogFileReader } from 'src/domain/ports/outbound/file/LogFileReader';
+import { GatewayLogsRepository } from 'src/domain/ports/outbound/database/GatewayLogsRepository';
 
 export class ProcessLogFileUseCase implements UseCase<string, void> {
   private readonly logger = new Logger(ProcessLogFileUseCase.name);

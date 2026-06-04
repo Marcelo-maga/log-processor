@@ -3,9 +3,9 @@
 /* eslint-disable @typescript-eslint/require-await */
 
 import { ProcessLogFileUseCase } from './ProcessLogFileUseCase';
-import { LogFileReader } from 'src/domain/ports/outbound/LogFileReader';
-import { GatewayLogsRepository } from 'src/domain/ports/outbound/GatewayLogsRepository';
 import { GatewayLogMapper } from '../mappers/GatewayLogMapper';
+import { LogFileReader } from 'src/domain/ports/outbound/file/LogFileReader';
+import { GatewayLogsRepository } from 'src/domain/ports/outbound/database/GatewayLogsRepository';
 
 const makeLine = (overrides = {}) =>
   JSON.stringify({
