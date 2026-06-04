@@ -10,9 +10,12 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      - ./log_files:/usr/src/app/log_files
+    networks:
+      - app_network
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@localhost:5432/logs_reports
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/logs_reports
     command: npm run start:dev
     restart: unless-stopped
 
