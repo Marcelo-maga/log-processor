@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as readline from 'readline';
-import { LogFileReader } from 'src/domain/ports/outbound/LogFileReader';
+import { LogFileReader } from 'src/domain/ports/outbound/file/LogFileReader';
 
 export class NdjsonFileReader extends LogFileReader {
   public async *read(filePath: string): AsyncIterable<string> {

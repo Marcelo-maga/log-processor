@@ -1,7 +1,7 @@
-import { GatewayLogsRepository } from 'src/domain/ports/outbound/GatewayLogsRepository';
 import { PgPrismaAdapter } from './PgPrismaAdapter';
 import { GatewayLog } from 'src/domain/entities/GatewayLog';
 import { randomUUID } from 'node:crypto';
+import { GatewayLogsRepository } from 'src/domain/ports/outbound/database/GatewayLogsRepository';
 
 export class PrismaGatewayLogsRepository implements GatewayLogsRepository {
   public constructor(private readonly prisma: PgPrismaAdapter) {}

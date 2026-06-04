@@ -3,9 +3,10 @@
 /* eslint-disable @typescript-eslint/require-await */
 
 import { ProcessLogFileUseCase } from './ProcessLogFileUseCase';
-import { LogFileReader } from 'src/domain/ports/outbound/LogFileReader';
-import { GatewayLogsRepository } from 'src/domain/ports/outbound/GatewayLogsRepository';
 import { GatewayLogMapper } from '../mappers/GatewayLogMapper';
+import { LogFileReader } from 'src/domain/ports/outbound/file/LogFileReader';
+import { GatewayLogsRepository } from 'src/domain/ports/outbound/database/GatewayLogsRepository';
+import { LogFileDto } from '../dto/LogFileDto';
 
 const makeLine = (overrides = {}) =>
   JSON.stringify({
@@ -71,7 +72,7 @@ describe('ProcessLogFileUseCase', () => {
 
   it('should map a valid line', () => {
     const line = makeLine();
-    const dto = JSON.parse(line);
+    const dto = JSON.parse(line) as LogFileDto;
     expect(() => GatewayLogMapper.toDomain(dto)).not.toThrow();
   });
 });
