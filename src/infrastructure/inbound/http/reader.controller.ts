@@ -1,7 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import type { ReaderDto } from '../dto/ReaderDto';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ReaderDto } from '../dto/ReaderDto';
 import { ProcessLogFileUseCase } from 'src/application/use-cases/ProcessLogFileUseCase';
 
+@ApiTags('reader')
 @Controller('reader')
 export class ReaderController {
   public constructor(
@@ -9,7 +11,17 @@ export class ReaderController {
   ) {}
 
   @Post()
-  public async readFileLog(@Body() body: ReaderDto) {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Process an NDJSON log file' })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'File processed successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid or missing filepath',
+  })
+  public async readFileLog(@Body() body: ReaderDto): Promise<void> {
     await this.processLogFileUseCase.execute(body.filepath);
   }
 }
