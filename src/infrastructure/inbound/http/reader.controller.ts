@@ -3,7 +3,6 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ReaderDto } from '../dto/ReaderDto';
 import { ProcessLogFileUseCase } from 'src/application/use-cases/ProcessLogFileUseCase';
 
-@ApiTags('reader')
 @Controller('reader')
 export class ReaderController {
   public constructor(
