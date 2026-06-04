@@ -16,7 +16,10 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/logs_reports
-    command: npm run start:dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && npm run start:dev"
     restart: unless-stopped
 
   postgres:
